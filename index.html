@@ -43,7 +43,6 @@
   }
   .wrap { max-width: 760px; margin: 0 auto; padding: 22px 16px 40px; }
 
-  /* Header */
   header { text-align: center; padding: 6px 0 2px; }
   header .logo-img { width: clamp(120px, 38%, 170px); height: auto; display: block; margin: 0 auto; }
   header h1 {
@@ -58,7 +57,6 @@
   .xdiv::before, .xdiv::after { content:""; height:1px; background:var(--line); flex:1; max-width:220px; }
   .xdiv svg { width:20px; height:20px; flex:none; color: var(--wood); }
 
-  /* Cards */
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 18px 16px; margin-bottom: 16px; }
   .cat-title {
     font-family: 'Fjalla One', sans-serif; text-transform: uppercase; letter-spacing: 2px;
@@ -72,7 +70,6 @@
   }
   .cat-sub { font-size:0.82rem; color:var(--ink-soft); margin:8px 0 14px; }
 
-  /* Amount input */
   label.fld { display:block; font-family:'Fjalla One',sans-serif; letter-spacing:1px;
     text-transform: uppercase; font-size: 0.74rem; color: var(--ink); margin: 0 0 8px; }
   .amount-box { position: relative; }
@@ -91,7 +88,14 @@
   input:focus { outline: 2px solid var(--wood-soft); outline-offset: 1px; border-color: var(--wood-soft); }
   input::placeholder { color:#A8A29A; }
 
-  /* Post rows */
+  /* btw block */
+  .btw-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .btw-row .lbl { font-family:'Roboto Slab',serif; font-weight:500; font-size:0.98rem; }
+  .btw-rate { position:relative; }
+  .btw-rate input { width:78px; text-align:right; padding-right:22px; }
+  .btw-rate .pc { position:absolute; right:9px; top:50%; transform:translateY(-50%); color:var(--ink-soft); font-size:0.85rem; pointer-events:none; }
+  .btw-row .euro { margin-left:auto; font-family:'Fjalla One',sans-serif; font-size:1.02rem; }
+
   .post {
     display:grid; grid-template-columns: 1fr 78px 110px 30px; gap:10px; align-items:center;
     padding:11px 0; border-bottom:1px solid var(--line-soft);
@@ -114,7 +118,6 @@
     line-height:1; padding:4px; border-radius:4px; opacity:.55; transition:.12s;
   }
   .post .del:hover { color:var(--err); background:var(--err-bg); opacity:1; }
-  .post .del.locked { visibility:hidden; }
   .row-head {
     display:grid; grid-template-columns: 1fr 78px 110px 30px; gap:10px;
     font-family:'Fjalla One',sans-serif; text-transform:uppercase; letter-spacing:1px;
@@ -123,7 +126,6 @@
   .row-head span:nth-child(2){ text-align:right; }
   .row-head span:nth-child(3){ text-align:right; }
 
-  /* totals */
   .total-line {
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     margin-top:14px; padding-top:13px; border-top:2px solid var(--ink);
@@ -144,7 +146,6 @@
   }
   .leftover .euro { font-size:1.25rem; color:var(--wood); }
 
-  /* buttons */
   .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
   .btn {
     display:inline-flex; align-items:center; justify-content:center; gap:7px;
@@ -196,38 +197,56 @@
     </div>
   </div>
 
-  <!-- Stap 1 -->
+  <!-- Stap 1: btw eraf -->
   <div class="card">
-    <div class="cat-title"><span class="step-no">1</span> Aftrekken van brutobedrag</div>
-    <div class="cat-sub">Deze posten worden van het binnengekomen bedrag afgetrokken. Wat overblijft gaat door naar stap 2.</div>
-    <div class="row-head"><span>Post</span><span>%</span><span>Bedrag</span><span></span></div>
-    <div id="stap1-list"></div>
-    <div class="actions">
-      <button class="btn btn-wood" data-add="1">+ Post toevoegen</button>
-      <button class="btn btn-ghost" data-reset="1">Standaard herstellen</button>
+    <div class="cat-title"><span class="step-no">1</span> Btw eraf halen</div>
+    <div class="cat-sub">De btw zit in het binnengekomen bedrag. Die wordt er als eerste afgehaald; wat overblijft is het nettobedrag waar de rest over wordt berekend.</div>
+    <div class="btw-row">
+      <span class="lbl">Btw-tarief</span>
+      <div class="btw-rate">
+        <input type="number" id="btwRate" step="0.1" min="0" value="17">
+        <span class="pc">%</span>
+      </div>
+      <span class="euro" id="btwEur">&euro; 0,00</span>
     </div>
-    <div class="warn-msg" id="warn1"></div>
     <div class="leftover">
-      <span>Blijft over na stap 1</span>
-      <span class="euro" id="rest1">&euro; 0,00</span>
+      <span>Nettobedrag (excl. btw)</span>
+      <span class="euro" id="netto">&euro; 0,00</span>
     </div>
   </div>
 
-  <!-- Stap 2 -->
+  <!-- Stap 2: aftrekken van netto -->
   <div class="card">
-    <div class="cat-title"><span class="step-no">2</span> Verdelen van het restant</div>
-    <div class="cat-sub">Het restant uit stap 1 wordt over deze potjes verdeeld. De percentages moeten samen op 100% uitkomen.</div>
-    <div class="row-head"><span>Potje</span><span>%</span><span>Bedrag</span><span></span></div>
-    <div id="stap2-list"></div>
+    <div class="cat-title"><span class="step-no">2</span> Aftrekken van nettobedrag</div>
+    <div class="cat-sub">Deze posten worden van het nettobedrag afgetrokken. Wat overblijft gaat door naar stap 3.</div>
+    <div class="row-head"><span>Post</span><span>%</span><span>Bedrag</span><span></span></div>
+    <div id="stapA-list"></div>
     <div class="actions">
-      <button class="btn btn-wood" data-add="2">+ Potje toevoegen</button>
-      <button class="btn btn-ghost" data-norm="2">Normaliseer naar 100%</button>
-      <button class="btn btn-ghost" data-reset="2">Standaard herstellen</button>
+      <button class="btn btn-wood" data-add="A">+ Post toevoegen</button>
+      <button class="btn btn-ghost" data-reset="A">Standaard herstellen</button>
     </div>
-    <div class="warn-msg" id="warn2"></div>
+    <div class="warn-msg" id="warnA"></div>
+    <div class="leftover">
+      <span>Blijft over na stap 2</span>
+      <span class="euro" id="restA">&euro; 0,00</span>
+    </div>
+  </div>
+
+  <!-- Stap 3: verdelen restant -->
+  <div class="card">
+    <div class="cat-title"><span class="step-no">3</span> Verdelen van het restant</div>
+    <div class="cat-sub">Het restant uit stap 2 wordt over deze potjes verdeeld. De percentages moeten samen op 100% uitkomen.</div>
+    <div class="row-head"><span>Potje</span><span>%</span><span>Bedrag</span><span></span></div>
+    <div id="stapB-list"></div>
+    <div class="actions">
+      <button class="btn btn-wood" data-add="B">+ Potje toevoegen</button>
+      <button class="btn btn-ghost" data-norm="B">Normaliseer naar 100%</button>
+      <button class="btn btn-ghost" data-reset="B">Standaard herstellen</button>
+    </div>
+    <div class="warn-msg" id="warnB"></div>
     <div class="total-line">
-      <span>Totaal verdeeld <span class="pct-badge ok" id="badge2">100%</span></span>
-      <span class="euro" id="tot2">&euro; 0,00</span>
+      <span>Totaal verdeeld <span class="pct-badge ok" id="badgeB">100%</span></span>
+      <span class="euro" id="totB">&euro; 0,00</span>
     </div>
   </div>
 
@@ -237,30 +256,26 @@
 <script>
 (function(){
   "use strict";
-  var DEF1 = [
-    { name:"Btw",     pct:17 },
-    { name:"Inkoop",  pct:32 }
-  ];
-  var DEF2 = [
-    { name:"Personeel",            pct:45 },
-    { name:"Vennootschapsbelasting", pct:7 },
-    { name:"Overige kosten",       pct:23 },
-    { name:"Buffer",               pct:25 }
+  var DEF_BTW = 17;
+  var DEF_A = [ { name:"Inkoop", pct:32 } ];                 // aftrek van netto
+  var DEF_B = [                                              // verdeling restant (100%)
+    { name:"Personeel",              pct:45 },
+    { name:"Vennootschapsbelasting", pct:7  },
+    { name:"Overige kosten",         pct:23 },
+    { name:"Buffer",                 pct:25 }
   ];
 
-  var state = {
-    1: DEF1.map(function(p){ return {name:p.name, pct:p.pct}; }),
-    2: DEF2.map(function(p){ return {name:p.name, pct:p.pct}; })
-  };
+  var state = { A: clone(DEF_A), B: clone(DEF_B) };
 
   function clone(arr){ return arr.map(function(p){ return {name:p.name, pct:p.pct}; }); }
-
+  function round2(n){ return Math.round((n + Number.EPSILON)*100)/100; }
   function eur(n){
     if (!isFinite(n)) n = 0;
     return "€ " + n.toLocaleString('nl-NL', {minimumFractionDigits:2, maximumFractionDigits:2});
   }
   function num(v){ var n = parseFloat(String(v).replace(',','.')); return isFinite(n) ? n : 0; }
   function bedrag(){ return Math.max(0, num(document.getElementById('bedrag').value)); }
+  function btwRate(){ return Math.max(0, num(document.getElementById('btwRate').value)); }
   function sumPct(step){ return state[step].reduce(function(a,p){ return a + (isFinite(p.pct)?p.pct:0); }, 0); }
 
   function buildRow(step, idx){
@@ -289,19 +304,14 @@
 
     var del = document.createElement('button');
     del.className = 'del'; del.innerHTML = '&times;'; del.title = 'Verwijderen';
-    del.addEventListener('click', function(){
-      state[step].splice(idx,1);
-      render();
-    });
+    del.addEventListener('click', function(){ state[step].splice(idx,1); render(); });
 
     row.appendChild(name); row.appendChild(pctWrap); row.appendChild(euro); row.appendChild(del);
     return row;
   }
 
-  function round2(n){ return Math.round((n + Number.EPSILON)*100)/100; }
-
   function render(){
-    [1,2].forEach(function(step){
+    ['A','B'].forEach(function(step){
       var list = document.getElementById('stap'+step+'-list');
       list.innerHTML = '';
       state[step].forEach(function(_, idx){ list.appendChild(buildRow(step, idx)); });
@@ -312,59 +322,63 @@
   function recalc(){
     var B = bedrag();
 
-    // Stap 1: aftrek van bruto
-    var s1 = sumPct(1);
-    state[1].forEach(function(p, idx){
-      var e = document.getElementById('s1-eur-'+idx);
-      if (e) e.textContent = eur(B * (p.pct/100));
-    });
-    var rest = B * (1 - s1/100);
-    document.getElementById('rest1').textContent = eur(rest);
+    // Stap 1: btw eraf (btw zit in het bedrag) -> netto
+    var r = btwRate();
+    var btw = B * (r / (100 + r));
+    var netto = B - btw;
+    document.getElementById('btwEur').textContent = eur(btw);
+    document.getElementById('netto').textContent = eur(netto);
 
-    var w1 = document.getElementById('warn1');
-    if (s1 > 100.0001){
-      w1.className = 'warn-msg show';
-      w1.innerHTML = '<b>Let op:</b> de aftrekposten in stap 1 zijn samen ' + round2(s1) + '%, meer dan 100% van het bedrag. Er blijft niets over voor stap 2.';
+    // Stap 2: aftrekken van netto
+    var sA = sumPct('A');
+    state.A.forEach(function(p, idx){
+      var e = document.getElementById('sA-eur-'+idx);
+      if (e) e.textContent = eur(netto * (p.pct/100));
+    });
+    var rest = netto * (1 - sA/100);
+    document.getElementById('restA').textContent = eur(rest);
+
+    var wA = document.getElementById('warnA');
+    if (sA > 100.0001){
+      wA.className = 'warn-msg show';
+      wA.innerHTML = '<b>Let op:</b> de posten in stap 2 zijn samen ' + round2(sA) + '%, meer dan 100% van het nettobedrag. Er blijft niets over voor stap 3.';
     } else {
-      w1.className = 'warn-msg';
+      wA.className = 'warn-msg';
     }
 
-    // Stap 2: verdeling van restant
+    // Stap 3: verdeling van restant
     var base = Math.max(0, rest);
-    var s2 = sumPct(2);
-    state[2].forEach(function(p, idx){
-      var e = document.getElementById('s2-eur-'+idx);
+    var sB = sumPct('B');
+    state.B.forEach(function(p, idx){
+      var e = document.getElementById('sB-eur-'+idx);
       if (e) e.textContent = eur(base * (p.pct/100));
     });
-    document.getElementById('tot2').textContent = eur(base * (s2/100));
+    document.getElementById('totB').textContent = eur(base * (sB/100));
 
-    var badge = document.getElementById('badge2');
-    var w2 = document.getElementById('warn2');
-    var diff = round2(s2 - 100);
+    var badge = document.getElementById('badgeB');
+    var wB = document.getElementById('warnB');
+    var diff = round2(sB - 100);
     if (Math.abs(diff) < 0.005){
       badge.className = 'pct-badge ok'; badge.textContent = '100%';
-      w2.className = 'warn-msg';
+      wB.className = 'warn-msg';
     } else {
-      badge.className = 'pct-badge bad'; badge.textContent = round2(s2) + '%';
-      w2.className = 'warn-msg show';
+      badge.className = 'pct-badge bad'; badge.textContent = round2(sB) + '%';
+      wB.className = 'warn-msg show';
       var teveel = diff > 0;
-      w2.innerHTML = '<b>Niet 100%:</b> de potjes zijn samen ' + round2(s2) + '% (' +
+      wB.innerHTML = '<b>Niet 100%:</b> de potjes zijn samen ' + round2(sB) + '% (' +
         (teveel ? round2(diff)+'% te veel' : round2(-diff)+'% te weinig') +
         '). Klik op <b>Normaliseer naar 100%</b> om evenredig bij te stellen.';
     }
   }
 
-  // Normaliseer: schaal alle percentages evenredig zodat som = 100
   function normalize(step){
     var s = sumPct(step);
     if (s <= 0){
-      // gelijk verdelen als alles 0 is
       var n = state[step].length;
       if (n) state[step].forEach(function(p){ p.pct = round2(100/n); });
     } else {
       state[step].forEach(function(p){ p.pct = round2(p.pct * 100 / s); });
     }
-    // afrondingsrest in laatste post leggen
     var tot = sumPct(step);
     if (state[step].length){
       var last = state[step][state[step].length-1];
@@ -373,23 +387,24 @@
     render();
   }
 
-  // Events
   document.getElementById('bedrag').addEventListener('input', recalc);
+  document.getElementById('btwRate').addEventListener('input', recalc);
 
   document.querySelectorAll('[data-add]').forEach(function(b){
     b.addEventListener('click', function(){
-      var step = +b.getAttribute('data-add');
+      var step = b.getAttribute('data-add');
       state[step].push({ name:'Nieuwe post', pct:0 });
       render();
     });
   });
   document.querySelectorAll('[data-norm]').forEach(function(b){
-    b.addEventListener('click', function(){ normalize(+b.getAttribute('data-norm')); });
+    b.addEventListener('click', function(){ normalize(b.getAttribute('data-norm')); });
   });
   document.querySelectorAll('[data-reset]').forEach(function(b){
     b.addEventListener('click', function(){
-      var step = +b.getAttribute('data-reset');
-      state[step] = clone(step === 1 ? DEF1 : DEF2);
+      var step = b.getAttribute('data-reset');
+      if (step === 'A') state.A = clone(DEF_A);
+      else state.B = clone(DEF_B);
       render();
     });
   });
