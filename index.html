@@ -209,7 +209,7 @@
   <!-- Stap 1: btw eraf -->
   <div class="card">
     <div class="cat-title"><span class="step-no">1</span> Btw eraf halen</div>
-    <div class="cat-sub">De btw zit in het binnengekomen bedrag. Die wordt er als eerste afgehaald; wat overblijft is het nettobedrag waar de rest over wordt berekend.</div>
+    <div class="cat-sub">De btw zit in het binnengekomen bedrag. Die wordt er als eerste afgehaald; wat overblijft is het nettobedrag dat in stap 2 over de potjes wordt verdeeld.</div>
     <div class="btw-row">
       <span class="lbl">Btw-tarief</span>
       <div class="btw-rate">
@@ -224,27 +224,10 @@
     </div>
   </div>
 
-  <!-- Stap 2: aftrekken van netto -->
+  <!-- Stap 2: verdelen over potjes -->
   <div class="card">
-    <div class="cat-title"><span class="step-no">2</span> Aftrekken van nettobedrag</div>
-    <div class="cat-sub">Deze posten worden van het nettobedrag afgetrokken. Wat overblijft gaat door naar stap 3.</div>
-    <div class="row-head"><span>Post</span><span>%</span><span>Bedrag</span><span></span></div>
-    <div id="stapA-list"></div>
-    <div class="actions">
-      <button class="btn btn-wood" data-add="A">+ Post toevoegen</button>
-      <button class="btn btn-ghost" data-reset="A">Standaard herstellen</button>
-    </div>
-    <div class="warn-msg" id="warnA"></div>
-    <div class="leftover">
-      <span>Blijft over na stap 2</span>
-      <span class="euro" id="restA">&euro; 0,00</span>
-    </div>
-  </div>
-
-  <!-- Stap 3: verdelen restant -->
-  <div class="card">
-    <div class="cat-title"><span class="step-no">3</span> Verdelen van het restant</div>
-    <div class="cat-sub">Het restant uit stap 2 wordt over deze potjes verdeeld. De percentages moeten samen op 100% uitkomen.</div>
+    <div class="cat-title"><span class="step-no">2</span> Verdelen over de potjes</div>
+    <div class="cat-sub">Het nettobedrag uit stap 1 wordt over deze potjes verdeeld. De percentages moeten samen op 100% uitkomen.</div>
     <div class="row-head"><span>Potje</span><span>%</span><span>Bedrag</span><span></span></div>
     <div id="stapB-list"></div>
     <div class="actions">
@@ -266,15 +249,15 @@
 (function(){
   "use strict";
   var DEF_BTW = 17;
-  var DEF_A = [ { name:"Inkoop", pct:32 } ];                 // aftrek van netto
-  var DEF_B = [                                              // verdeling restant (100%)
+  var DEF_B = [                                              // verdeling nettobedrag
+    { name:"Inkoop",                 pct:32 },
     { name:"Personeel",              pct:45 },
     { name:"Vennootschapsbelasting", pct:7  },
     { name:"Overige kosten",         pct:23 },
     { name:"Buffer",                 pct:25 }
   ];
 
-  var state = { A: clone(DEF_A), B: clone(DEF_B) };
+  var state = { B: clone(DEF_B) };
 
   function clone(arr){ return arr.map(function(p){ return {name:p.name, pct:p.pct}; }); }
   function round2(n){ return Math.round((n + Number.EPSILON)*100)/100; }
@@ -320,11 +303,9 @@
   }
 
   function render(){
-    ['A','B'].forEach(function(step){
-      var list = document.getElementById('stap'+step+'-list');
-      list.innerHTML = '';
-      state[step].forEach(function(_, idx){ list.appendChild(buildRow(step, idx)); });
-    });
+    var list = document.getElementById('stapB-list');
+    list.innerHTML = '';
+    state.B.forEach(function(_, idx){ list.appendChild(buildRow('B', idx)); });
     recalc();
   }
 
@@ -338,25 +319,8 @@
     document.getElementById('btwEur').textContent = eur(btw);
     document.getElementById('netto').textContent = eur(netto);
 
-    // Stap 2: aftrekken van netto
-    var sA = sumPct('A');
-    state.A.forEach(function(p, idx){
-      var e = document.getElementById('sA-eur-'+idx);
-      if (e) e.textContent = eur(netto * (p.pct/100));
-    });
-    var rest = netto * (1 - sA/100);
-    document.getElementById('restA').textContent = eur(rest);
-
-    var wA = document.getElementById('warnA');
-    if (sA > 100.0001){
-      wA.className = 'warn-msg show';
-      wA.innerHTML = '<b>Let op:</b> de posten in stap 2 zijn samen ' + round2(sA) + '%, meer dan 100% van het nettobedrag. Er blijft niets over voor stap 3.';
-    } else {
-      wA.className = 'warn-msg';
-    }
-
-    // Stap 3: verdeling van restant
-    var base = Math.max(0, rest);
+    // Stap 2: verdeling van nettobedrag over de potjes
+    var base = Math.max(0, netto);
     var sB = sumPct('B');
     state.B.forEach(function(p, idx){
       var e = document.getElementById('sB-eur-'+idx);
@@ -410,12 +374,7 @@
     b.addEventListener('click', function(){ normalize(b.getAttribute('data-norm')); });
   });
   document.querySelectorAll('[data-reset]').forEach(function(b){
-    b.addEventListener('click', function(){
-      var step = b.getAttribute('data-reset');
-      if (step === 'A') state.A = clone(DEF_A);
-      else state.B = clone(DEF_B);
-      render();
-    });
+    b.addEventListener('click', function(){ state.B = clone(DEF_B); render(); });
   });
 
   render();
